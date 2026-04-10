@@ -2,7 +2,7 @@ var board,
     game = new Chess();
 
 // Connect to the backend Socket.IO server
-var socket = io.connect("https://your-repl-name.onrender.com");  // Change to your actual backend URL
+var socket = io.connect("https://chess-multiplayer-test.onrender.com/");  // Change to your actual backend URL
 
 // Listen for game state updates (i.e., when someone makes a move)
 socket.on('gameState', function(fen) {
