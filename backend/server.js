@@ -1,19 +1,40 @@
 const express = require("express");
-const cors = require("cors");
+const http = require("http");
+const socketIo = require("socket.io");
+const Chess = require("chess.js").Chess;
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const server = http.createServer(app);
+const io = socketIo(server);
 
-app.use(cors({ origin: "*" }));
+// Initialize the game
+let game = new Chess();
 
-app.get("/secret", (req, res) => {
-  res.json({ secret: "Cheese" });
+// Serve static files for frontend (Vercel)
+app.use(express.static("frontend"));
+
+// Handle socket connections
+io.on("connection", (socket) => {
+  console.log('A player connected');
+
+  // Send the initial game state (FEN notation)
+  socket.emit('gameState', game.fen());
+
+  // Listen for player moves
+  socket.on('makeMove', (move) => {
+    let result = game.move(move);
+    if (result) {
+      io.emit('gameState', game.fen()); // Broadcast updated game state
+    }
+  });
+
+  // Player disconnects
+  socket.on('disconnect', () => {
+    console.log('A player disconnected');
+  });
 });
 
-app.get("/", (req, res) => {
-  res.send("Backend is running");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+// Start the server
+server.listen(process.env.PORT || 10000, () => {
+  console.log("Server is running...");
 });

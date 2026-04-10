@@ -1,14 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Cheese Test</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Chess Multiplayer</title>
+  <link rel="stylesheet" href="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chess.js@0.10.3/chess.min.js"></script>
+  <script src="https://unpkg.com/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    #board1 { width: 400px; margin: 20px auto; }
+    button { padding: 10px 20px; font-size: 16px; }
+    #gameStatus { font-size: 18px; margin-top: 20px; }
+  </style>
 </head>
 <body>
-  <h1>Cheese Package Test</h1>
-  <button id="getSecret">Get Secret</button>
-  <p id="display"></p>
-
+  <h1>Chess Multiplayer</h1>
+  <div id="board1"></div>
+  <button id="startBtn">Start Game</button>
+  <button id="clearBtn">Clear Board</button>
+  <p id="gameStatus"></p>
   <script src="script.js"></script>
 </body>
 </html>
