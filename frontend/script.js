@@ -1,13 +1,13 @@
 var board,
     game = new Chess();
 
-// Connect to the backend Socket.IO server
-var socket = io.connect("https://your-repl-name.onrender.com");  // Change to your actual backend URL
+// Connect to the backend Socket.IO server (update to your actual backend URL)
+var socket = io.connect("https://chess-multiplayer-test.onrender.com");  // Change to your actual backend URL
 
-// Listen for game state updates (i.e., when someone makes a move)
+// Listen for game state updates
 socket.on('gameState', function(fen) {
-  game.load(fen);  // Load the new game state (FEN notation)
-  board.position(game.fen());  // Update the board
+  game.load(fen);
+  board.position(game.fen());
 });
 
 // Set up the chessboard
@@ -17,11 +17,11 @@ function initBoard() {
     dropOffBoard: 'trash',
     sparePieces: true,
     onDrop: handleMove,
-    onMouseoutSquare: squareHighlight,
-    onMouseoverSquare: squareHighlight
+    onMouseoutSquare: onMouseoutSquare,
+    onMouseoverSquare: onMouseoverSquare
   });
   
-  board.start();
+  board.position(game.fen());  // Set initial position
 }
 
 // Handle move logic
@@ -29,31 +29,44 @@ function handleMove(source, target) {
   var move = game.move({
     from: source,
     to: target,
-    promotion: 'q' // Always promote to a queen for simplicity
+    promotion: 'q'
   });
 
   if (move === null) {
     return 'snapback';
   }
 
-  // Send the move to the server
   socket.emit('makeMove', move);
-
+  updateGameStatus();
   renderMoveHistory(game.history());
-  renderBoardStatus();
+}
+
+// Square highlight functions (basic implementation)
+var highlightedSquare = null;
+
+function onMouseoverSquare(square, piece) {
+  if (highlightedSquare) {
+    board.removeHighlights();
+  }
+  highlightedSquare = square;
+  board.addHighlights([square]);
+}
+
+function onMouseoutSquare(square, piece) {
+  board.removeHighlights();
+  highlightedSquare = null;
 }
 
 // Render the move history
 function renderMoveHistory(moves) {
-  var historyElement = document.getElementById('move-history').empty();
-  historyElement.empty();
-  historyElement.append(moves.join(' '));
+  var historyElement = document.getElementById('move-history');
+  historyElement.innerHTML = moves.join(' ');
 }
 
-// Update game status (checkmate, stalemate, etc)
-function renderBoardStatus() {
+// Update game status
+function updateGameStatus() {
   var status = '';
-  var moveColor = 'White';
+  var moveColor = game.turn() === 'w' ? 'White' : 'Black';
   if (game.inCheckmate()) {
     status = moveColor + ' is in checkmate!';
   } else if (game.inStalemate()) {
@@ -72,15 +85,17 @@ function renderBoardStatus() {
 // Initialize everything
 document.addEventListener("DOMContentLoaded", function() {
   initBoard();
+  updateGameStatus();
+  
   document.getElementById('startBtn').addEventListener('click', function() {
     game.reset();
-    renderBoard();
-    renderBoardStatus();
+    board.position(game.fen());
+    updateGameStatus();
   });
 
   document.getElementById('clearBtn').addEventListener('click', function() {
     game.clear();
-    renderBoard();
-    renderBoardStatus();
+    board.position(game.fen());
+    updateGameStatus();
   });
 });
