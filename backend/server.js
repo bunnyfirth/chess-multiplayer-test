@@ -1,40 +1,44 @@
 const express = require("express");
 const http = require("http");
-const socketIo = require("socket.io");
+const { Server } = require("socket.io");
 const Chess = require("chess.js").Chess;
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
 
-// Initialize the game
+// ✅ IMPORTANT: CORS FIX FOR SOCKET.IO
+const io = new Server(server, {
+  cors: {
+    origin: "*", // for testing (we can lock it later)
+    methods: ["GET", "POST"]
+  }
+});
+
 let game = new Chess();
 
-// Serve static files for frontend (Vercel)
-app.use(express.static("frontend"));
+// optional health route
+app.get("/", (req, res) => {
+  res.send("Chess backend running");
+});
 
-// Handle socket connections
 io.on("connection", (socket) => {
-  console.log('A player connected');
+  console.log("Player connected");
 
-  // Send the initial game state (FEN notation)
-  socket.emit('gameState', game.fen());
+  socket.emit("gameState", game.fen());
 
-  // Listen for player moves
-  socket.on('makeMove', (move) => {
-    let result = game.move(move);
+  socket.on("makeMove", (move) => {
+    const result = game.move(move);
+
     if (result) {
-      io.emit('gameState', game.fen()); // Broadcast updated game state
+      io.emit("gameState", game.fen());
     }
   });
 
-  // Player disconnects
-  socket.on('disconnect', () => {
-    console.log('A player disconnected');
+  socket.on("disconnect", () => {
+    console.log("Player disconnected");
   });
 });
 
-// Start the server
 server.listen(process.env.PORT || 10000, () => {
-  console.log("Server is running...");
+  console.log("Server running");
 });
